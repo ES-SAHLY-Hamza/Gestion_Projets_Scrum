@@ -4,6 +4,7 @@ import CollaboratorsList from "./components/CollaboratorsList";
 import FormationsCatalogue from "./components/FormationsCatalogue";
 import Login from "./components/Login";
 import Home from "./components/Home";
+import '../src/App.css'
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -22,7 +23,7 @@ function App() {
     <Router>
       {isLoggedIn ? (
         <>
-          <button onClick={handleLogout}>Se déconnecter</button>
+          <button className="logout-btn" onClick={handleLogout}>Se déconnecter</button>
 
           <Routes>
             <Route path="/" element={<Home />} />
