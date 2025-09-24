@@ -1,9 +1,12 @@
+// src/components/CollaboratorsList.jsx
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../styles/CollaboratorsList.css";
 
 const CollaboratorsList = () => {
   const [collaborators, setCollaborators] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch("http://127.0.0.1:8000/api/collaborateurs/")
@@ -29,6 +32,10 @@ const CollaboratorsList = () => {
 
   return (
     <div className="table-container">
+      <button className="back-button" onClick={() => navigate("/")}>
+        ← Retour
+      </button>
+
       <h1>Liste des Collaborateurs</h1>
       <table className="styled-table">
         <thead>
