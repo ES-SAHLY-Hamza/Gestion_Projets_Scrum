@@ -25,7 +25,7 @@ const CollaboratorsList = () => {
         setLoading(false);
       });
   }, []); */
-  useEffect(() => {
+/*   useEffect(() => {
     const token = localStorage.getItem("token");
 
     fetch("http://127.0.0.1:8000/api/collaborateurs/", {
@@ -47,7 +47,36 @@ const CollaboratorsList = () => {
         console.error("Erreur lors du fetch :", error);
         setLoading(false);
       });
+  }, []); */
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const collaborateurId = localStorage.getItem("collaborateur_id");
+
+    fetch("http://127.0.0.1:8000/api/collaborateurs/", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Collaborateur-Id": collaborateurId,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Erreur HTTP " + res.status);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setCollaborators(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Erreur lors du fetch :", error);
+        setLoading(false);
+      });
+      console.log("Token:", token);
+      console.log("Collaborateur ID:", collaborateurId);
+
   }, []);
+
   
   if (loading) {
     return <p>Chargement des données...</p>;
