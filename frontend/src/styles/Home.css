@@ -1,0 +1,67 @@
+/* Fond général */
+.home {
+  display: flex;
+  flex-direction: column; /* vertical pour titre + boutons */
+  justify-content: center;
+  align-items: center;
+  gap: 50px; /* espace entre titre et boutons */
+  width: 100%;
+  
+}
+
+
+/* Titre */
+.home-title {
+  font-size: 2.8rem;
+  font-weight: 800;
+  margin-bottom: 20px;
+  color: #1e293b;
+  background: linear-gradient(to right, #2563eb, #16a34a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-top: 50px;
+}
+
+.home-buttons {
+  display: flex;
+  flex-direction: row;   /* horizontal */
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+  width: 100%;           /* prend toute la largeur possible */
+  max-width: 600px;      /* optionnel : limite la largeur sur grand écran */
+}
+
+/* Style de base des boutons */
+.btn {
+  padding: 18px 40px;
+  border: none;
+  border-radius: 14px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+/* Bouton bleu */
+.btn-blue {
+  background-color: #2563eb;
+  color: white;
+}
+
+.btn-blue:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-4px) scale(1.05);
+}
+
+/* Bouton vert */
+.btn-green {
+  background-color: #16a34a;
+  color: white;
+}
+
+.btn-green:hover {
+  background-color: #15803d;
+  transform: translateY(-4px) scale(1.05);
+}
