@@ -2,6 +2,8 @@ from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 
 # Données globales (avec email + password)
@@ -90,7 +92,11 @@ COLLABORATEURS = [
     {"id": 28, "nom": "Robin", "prenom": "Alexandre", "role": "Testeur",
      "date_integration": "2024-11-21", "annees_experience": 2,
      "email": "alexandre.robin@entreprise.com", "password": "password28"},
+    {"id": 30, "nom": "GHALI", "prenom": "Taha", "role": "Manager",
+     "date_integration": "2024-11-21", "annees_experience": 10,
+     "email": "GHALI.Taha@entreprise.com", "password": "Taha123"},
 ]
+
 
 
 FORMATIONS = [
@@ -111,10 +117,10 @@ FORMATIONS = [
     {"id": 10, "name": "Certif. Data Ethics (extern)", "type": "Externe - Certifiante", "price": 900, "certified": True, "specification": ["Business Analyst", "Product Owner"]},
 ]
 
-def formations_list(request):
-    return JsonResponse({"formations": FORMATIONS}, safe=False)
+""" def formations_list(request):
+    return JsonResponse({"formations": FORMATIONS}, safe=False) """
 
-class CollaborateurMockView(APIView):
+""" class CollaborateurMockView(APIView):
     def get(self, request):
         # On supprime email & password avant d'envoyer la réponse
         safe_collaborateurs = [
@@ -122,6 +128,50 @@ class CollaborateurMockView(APIView):
             for c in COLLABORATEURS
         ]
         return Response(safe_collaborateurs)
+ """
+
+def get_user_from_request(request):
+    """Récupère le collaborateur à partir du collaborateur_id envoyé par le front"""
+    user_id = request.headers.get("Collaborateur-Id")
+    if not user_id:
+        return None
+    return next((c for c in COLLABORATEURS if c["id"] == int(user_id)), None)
+
+@csrf_exempt
+def formations_list(request):
+    user = get_user_from_request(request)
+    if not user:
+        return JsonResponse({"error": "Utilisateur non authentifié"}, status=401)
+
+    # Manager → accès à toutes les formations
+    if user["role"] == "Manager":
+        return JsonResponse({"formations": FORMATIONS}, safe=False)
+
+    # Collaborateur normal → filtrer par rôle
+    filtered = [
+        f for f in FORMATIONS
+        if "Tous" in f["specification"] or user["role"] in f["specification"]
+    ]
+    return JsonResponse({"formations": filtered}, safe=False)
+
+
+class CollaborateurMockView(APIView):
+    def get(self, request):
+        user = get_user_from_request(request)
+        if not user:
+            return Response({"error": "Non authentifié"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # Manager → voir tous les collaborateurs
+        if user["role"] == "Manager":
+            safe_collaborateurs = [
+                {k: v for k, v in c.items() if k not in ["email", "password"]}
+                for c in COLLABORATEURS
+            ]
+            return Response(safe_collaborateurs)
+
+        # Collaborateur normal → voir uniquement son propre profil
+        safe_user = {k: v for k, v in user.items() if k not in ["email", "password"]}
+        return Response([safe_user])
 
 
 class LoginMockView(APIView):

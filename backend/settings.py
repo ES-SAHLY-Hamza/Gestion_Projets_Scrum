@@ -12,11 +12,18 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from decouple import config
+from corsheaders.defaults import default_headers
+
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 DEBUG = config('DEBUG', default=True, cast=bool)
+
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "collaborateur-id",
+]
 
 
 SECRET_KEY = "django-insecure-9r&z5#_@e$u6v=7!4t+q)g^%h!3t-@)8=1#j7$u8i9wz"  
