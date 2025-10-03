@@ -22,3 +22,30 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Optional npm cache directory
+.npm
+.eslintcache
+.parcel-cache
+.cache
+.next
+.nuxt
+out
+coverage
+.build
+
+# dotenv environment variables file
+.env
+.env.test
+.env.production
+.env.local
+.env.*.local
+.envrc
+.env.*.local
+.env.test.local
+.env.production.local
+.env.staging.local
+.env.development.local
+.env.ci.local
+.env.preview.local
+
