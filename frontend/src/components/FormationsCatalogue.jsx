@@ -8,7 +8,7 @@ const FormationsCatalogue = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
+  /* useEffect(() => {
     fetch("http://127.0.0.1:8000/api/formations/")
       .then((res) => {
         if (!res.ok) throw new Error("Erreur HTTP " + res.status);
@@ -22,7 +22,35 @@ const FormationsCatalogue = () => {
         console.error("Erreur de chargement :", err);
         setLoading(false);
       });
+  }, []); */
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const collaborateurId = localStorage.getItem("collaborateur_id");
+
+    fetch("http://127.0.0.1:8000/api/formations/", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Collaborateur-Id": collaborateurId,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Erreur HTTP " + res.status);
+        return res.json();
+      })
+      .then((data) => {
+        setFormations(data.formations || []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Erreur de chargement :", err);
+        setLoading(false);
+      });
+      console.log("Token:", token);
+      console.log("Collaborateur ID:", collaborateurId);
+
   }, []);
+
 
   if (loading) return <p>Chargement des formations...</p>;
 

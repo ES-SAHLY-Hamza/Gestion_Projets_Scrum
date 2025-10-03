@@ -88,3 +88,23 @@ ul {
   padding-left: 1.2rem;
   margin: 0.3rem 0 0 0;
 }
+
+
+.logout-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
+  background-color: #b91c1c;
+  transform: scale(1.05);
+}
