@@ -95,6 +95,9 @@ COLLABORATEURS = [
     {"id": 30, "nom": "GHALI", "prenom": "Taha", "role": "Manager",
      "date_integration": "2024-11-21", "annees_experience": 10,
      "email": "GHALI.Taha@entreprise.com", "password": "Taha123"},
+     {"id": 31, "nom": "ES-SAHLY", "prenom": "Hamza", "role": "RH",
+     "date_integration": "2020-11-21", "annees_experience": 12,
+     "email": "ES-SAHLY.Hamza@entreprise.com", "password": "hamza123"},
 ]
 
 
@@ -144,7 +147,7 @@ def formations_list(request):
         return JsonResponse({"error": "Utilisateur non authentifié"}, status=401)
 
     # Manager → accès à toutes les formations
-    if user["role"] == "Manager":
+    if user["role"] == "Manager" or "RH":
         return JsonResponse({"formations": FORMATIONS}, safe=False)
 
     # Collaborateur normal → filtrer par rôle
@@ -162,7 +165,7 @@ class CollaborateurMockView(APIView):
             return Response({"error": "Non authentifié"}, status=status.HTTP_401_UNAUTHORIZED)
 
         # Manager → voir tous les collaborateurs
-        if user["role"] == "Manager":
+        if user["role"] == "Manager" or "RH":
             safe_collaborateurs = [
                 {k: v for k, v in c.items() if k not in ["email", "password"]}
                 for c in COLLABORATEURS
