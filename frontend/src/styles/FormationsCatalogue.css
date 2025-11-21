@@ -110,3 +110,40 @@ ul {
   background-color: #218838;
   transform: translateY(-2px);
 }
+
+.demande-btn {
+  padding: 14px 20px;
+  border: none;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: 100%;
+  margin-top: 15px;
+}
+
+.demande-btn.gratuite {
+  background: #22c55e;
+  color: white;
+}
+
+.demande-btn.payante {
+  background: #fb923c;
+  color: white;
+}
+
+.demande-btn.certifiante {
+  background: #ef4444;
+  color: white;
+}
+
+.demande-btn.deja {
+  background: #94a3b8;
+  color: white;
+  cursor: not-allowed;
+}
+
+.demande-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
