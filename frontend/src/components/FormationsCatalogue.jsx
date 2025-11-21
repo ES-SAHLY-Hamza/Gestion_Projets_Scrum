@@ -10,6 +10,7 @@ const FormationsCatalogue = () => {
   const [loading, setLoading] = useState(true);
   const [selectedFormation, setSelectedFormation] = useState(null);
   const [notification, setNotification] = useState("");
+  const [role, setRole] = useState("");
   const navigate = useNavigate();
 
   // Chargement des formations + demandes déjà faites
@@ -26,7 +27,10 @@ const FormationsCatalogue = () => {
       headers: { "Collaborateur-Id": collaborateurId },
     })
       .then(res => res.json())
-      .then(data => setFormations(data.formations || []))
+      .then(data => {
+          setFormations(data.formations || []);
+          setRole(data.role || "");   // ← AJOUT
+      })
       .catch(() => setNotification("Erreur de chargement des formations"));
 
     // Récupère les demandes déjà faites (pour bloquer le bouton)
@@ -103,29 +107,32 @@ const FormationsCatalogue = () => {
                 </ul>
               </div>
 
-              <button
-                onClick={() => demanderFormation(formation.id)}
-                disabled={selectedFormation === formation.id || estDejaDemandee}
-                className={`demande-btn ${
-                  estDejaDemandee
-                    ? "deja"
+              {role !== "Manager" && role !== "RH" && (
+                <button
+                  onClick={() => demanderFormation(formation.id)}
+                  disabled={selectedFormation === formation.id || estDejaDemandee}
+                  className={`demande-btn ${
+                    estDejaDemandee
+                      ? "deja"
+                      : estGratuite
+                      ? "gratuite"
+                      : formation.certified
+                      ? "certifiante"
+                      : "payante"
+                  }`}
+                >
+                  {selectedFormation === formation.id
+                    ? "Envoi..."
+                    : estDejaDemandee
+                    ? "Déjà demandée"
                     : estGratuite
-                    ? "gratuite"
+                    ? "Suivre gratuitement"
                     : formation.certified
-                    ? "certifiante"
-                    : "payante"
-                }`}
-              >
-                {selectedFormation === formation.id
-                  ? "Envoi..."
-                  : estDejaDemandee
-                  ? "Déjà demandée"
-                  : estGratuite
-                  ? "Suivre gratuitement"
-                  : formation.certified
-                  ? "Demander (certifiante)"
-                  : "Demander la formation"}
-              </button>
+                    ? "Demander (certifiante)"
+                    : "Demander la formation"}
+                </button>
+            )}
+
             </div>
           );
         })}

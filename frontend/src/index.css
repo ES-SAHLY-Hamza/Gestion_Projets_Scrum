@@ -26,7 +26,8 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background-color: var(--color-bg);
-  background: linear-gradient(135deg, #fbfdfe, #ffffff);
+  /* background: linear-gradient(135deg, #fbfdfe, #ffffff); */
+  background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
   color: var(--color-text);
   display: flex;
   flex-direction: column;

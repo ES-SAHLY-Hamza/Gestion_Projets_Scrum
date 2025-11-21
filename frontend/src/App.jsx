@@ -5,6 +5,8 @@ import FormationsCatalogue from "./components/FormationsCatalogue";
 import Login from "./components/Login";
 import Home from "./components/Home";
 import '../src/App.css'
+import MesDemandes from "./components/MesDemandes";
+import ManagerDemandes from "./components/ManagerDemandes";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -29,6 +31,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/collaborateurs" element={<CollaboratorsList />} />
             <Route path="/formations" element={<FormationsCatalogue />} />
+            <Route path="/mes-demandes" element={<MesDemandes />} />
+            <Route path="/manager-demandes" element={<ManagerDemandes />} />
             {/* Toute autre route → accueil */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
