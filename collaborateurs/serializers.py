@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Collaborateur, Formation, CollaborateurFormation
+from .models import Collaborateur, Formation, CollaborateurFormation, DemandeFormation
 
 class FormationSerializer(serializers.ModelSerializer):
     type_formation_display = serializers.CharField(source='get_type_formation_display', read_only=True)
@@ -88,3 +88,19 @@ class CollaborateurCreateUpdateSerializer(serializers.ModelSerializer):
             if Collaborateur.objects.filter(email=value).exists():
                 raise serializers.ValidationError("Un collaborateur avec cet email existe déjà.")
         return value
+
+
+class DemandeFormationSerializer(serializers.ModelSerializer):
+    collaborateur_nom = serializers.CharField(source='collaborateur.get_full_name', read_only=True)
+    formation_nom = serializers.CharField(source='formation.name', read_only=True)
+    prix = serializers.DecimalField(source='formation.price', max_digits=10, decimal_places=2, read_only=True)
+    certifiante = serializers.BooleanField(source='formation.certified', read_only=True)
+
+    class Meta:
+        model = DemandeFormation
+        fields = [
+            'id', 'collaborateur', 'collaborateur_nom',
+            'formation', 'formation_nom', 'prix', 'certifiante',
+            'date_demande', 'statut'
+        ]
+        read_only_fields = ['date_demande', 'statut', 'collaborateur']
