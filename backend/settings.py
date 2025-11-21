@@ -71,6 +71,10 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'backend.urls'
 
+# settings.py
+
+AUTH_USER_MODEL = 'collaborateurs.Collaborateur'   # ← LIGNE À AJOUTER OBLIGATOIREMENT
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -92,7 +96,12 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 
 # Pas de base de données
-DATABASES = {}
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',  # moteur SQLite
+        'NAME': BASE_DIR / 'db.sqlite3',        # chemin vers le fichier DB
+    }
+}
 
 
 
