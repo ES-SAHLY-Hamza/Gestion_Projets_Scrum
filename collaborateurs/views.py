@@ -147,7 +147,7 @@ def formations_list(request):
         return JsonResponse({"error": "Utilisateur non authentifié"}, status=401)
 
     # Manager → accès à toutes les formations
-    if user["role"] == "Manager" or "RH":
+    if user["role"] in ["Manager", "RH"]:
         return JsonResponse({"formations": FORMATIONS}, safe=False)
 
     # Collaborateur normal → filtrer par rôle
@@ -165,7 +165,7 @@ class CollaborateurMockView(APIView):
             return Response({"error": "Non authentifié"}, status=status.HTTP_401_UNAUTHORIZED)
 
         # Manager → voir tous les collaborateurs
-        if user["role"] == "Manager" or "RH":
+        if user["role"] in ["Manager", "RH"]:
             safe_collaborateurs = [
                 {k: v for k, v in c.items() if k not in ["email", "password"]}
                 for c in COLLABORATEURS
