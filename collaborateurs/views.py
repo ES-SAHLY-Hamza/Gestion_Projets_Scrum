@@ -199,3 +199,106 @@ class LoginMockView(APIView):
             {"error": "Email ou mot de passe incorrect"},
             status=status.HTTP_401_UNAUTHORIZED,
         )
+from rest_framework import generics, permissions
+from .models import Collaborateur, DemandeFormation, Formation
+from .serializers import DemandeFormationSerializer
+
+class DemandeFormationCreateView(generics.CreateAPIView):
+    serializer_class = DemandeFormationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        collaborateur_id = self.request.headers.get("Collaborateur-Id")
+        serializer.save(collaborateur_id=collaborateur_id)
+ # --- Demander une formation (la logique que tu veux) ---
+# ====================== 100% MOCK - TOUT FONCTIONNE ======================
+
+# Liste en mémoire des demandes (disparaît au redémarrage, parfait pour dev)
+DEMANDES = []
+
+class DemanderFormationView(APIView):
+    def post(self, request):
+        user_id = request.headers.get("Collaborateur-Id")
+        if not user_id:
+            return Response({"error": "Collaborateur-Id requis"}, status=403)
+
+        user = get_user_from_request(request)
+        if not user:
+            return Response({"error": "Utilisateur inconnu"}, status=403)
+
+        formation_id = request.data.get("formation_id")
+        formation = next((f for f in FORMATIONS if f["id"] == int(formation_id)), None)
+        if not formation:
+            return Response({"error": "Formation non trouvée"}, status=404)
+
+        # VÉRIFIE SI DÉJÀ DEMANDÉE PAR CET UTILISATEUR
+        deja_demandee = any(
+            d["collaborateur_id"] == user["id"] and d["formation_id"] == formation["id"]
+            for d in DEMANDES
+        )
+
+        if deja_demandee:
+            return Response({
+                "message": "Tu as déjà demandé cette formation !",
+                "statut": "déjà demandée",
+                "deja_demandee": True
+            }, status=200)  # 200 car c’est pas une erreur
+
+        # Sinon → on crée la demande
+        if formation["price"] == 0:
+            statut = "Validée"
+            message = "Formation gratuite validée automatiquement !"
+        elif formation["certified"]:
+            statut = "En attente Manager & RH"
+            message = "Demande envoyée → Manager puis RH (formation certifiante payante)"
+        else:
+            statut = "En attente Manager"
+            message = "Demande envoyée au Manager pour validation"
+
+        demande = {
+            "id": len(DEMANDES) + 1,
+            "collaborateur_id": user["id"],
+            "formation_id": formation["id"],
+            "collaborateur": f"{user['prenom']} {user['nom']}",
+            "formation": formation["name"],
+            "prix": formation["price"],
+            "certifiante": formation["certified"],
+            "statut": statut,
+            "date_demande": "2025-11-21"
+        }
+        DEMANDES.append(demande)
+        print(DEMANDES)  # Pour debug en console
+
+        return Response({
+            "message": message,
+            "demande": demande,
+            "deja_demandee": False
+        }, status=201)
+    
+
+class MesDemandesView(APIView):
+    def get(self, request):
+        user_id = request.headers.get("Collaborateur-Id")
+        if not user_id:
+            return Response({"error": "Collaborateur-Id requis"}, status=403)
+
+        user = get_user_from_request(request)
+        if not user:
+            return Response({"error": "Utilisateur inconnu"}, status=403)
+
+        mes_demandes = [d for d in DEMANDES if d["collaborateur_id"] == user["id"]]
+        return Response({"demandes": mes_demandes})
+
+
+class DemandesManagerView(APIView):
+    def get(self, request):
+        user_id = request.headers.get("Collaborateur-Id")
+        if not user_id:
+            return Response({"error": "Collaborateur-Id requis"}, status=403)
+
+        user = get_user_from_request(request)
+        if not user or user["role"] != "Manager":
+            return Response({"error": "Accès refusé - Manager seulement"}, status=403)
+
+        demandes_en_attente = [d for d in DEMANDES if "attente" in d["statut"].lower()]
+        return Response({"demandes": demandes_en_attente})
