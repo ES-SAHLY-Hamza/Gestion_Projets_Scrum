@@ -6,40 +6,47 @@ import Notification from "./Notification";
 
 const FormationsCatalogue = () => {
   const [formations, setFormations] = useState([]);
+  const [demandesEnvoyees, setDemandesEnvoyees] = useState(new Set()); // ← NEW
   const [loading, setLoading] = useState(true);
   const [selectedFormation, setSelectedFormation] = useState(null);
   const [notification, setNotification] = useState("");
+  const [role, setRole] = useState("");
   const navigate = useNavigate();
 
-  // Récupérer les formations du backend
+  // Chargement des formations + demandes déjà faites
   useEffect(() => {
-    const token = localStorage.getItem("token");
     const collaborateurId = localStorage.getItem("collaborateur_id");
+    if (!collaborateurId) {
+      setNotification("Veuillez vous connecter");
+      setLoading(false);
+      return;
+    }
 
+    // Récupère les formations
     fetch("http://127.0.0.1:8000/api/formations/", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Collaborateur-Id": collaborateurId,
-      },
+      headers: { "Collaborateur-Id": collaborateurId },
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("Erreur HTTP " + res.status);
-        return res.json();
+      .then(res => res.json())
+      .then(data => {
+          setFormations(data.formations || []);
+          setRole(data.role || "");   // ← AJOUT
       })
-      .then((data) => {
-        setFormations(data.formations || []);
-        setLoading(false);
+      .catch(() => setNotification("Erreur de chargement des formations"));
+
+    // Récupère les demandes déjà faites (pour bloquer le bouton)
+    fetch("http://127.0.0.1:8000/api/mes-demandes/", {
+      headers: { "Collaborateur-Id": collaborateurId },
+    })
+      .then(res => res.json())
+      .then(data => {
+        const ids = data.demandes?.map(d => d.formation_id) || [];
+        setDemandesEnvoyees(new Set(ids));
       })
-      .catch((err) => {
-        console.error("Erreur de chargement :", err);
-        setNotification("Erreur lors du chargement des formations.");
-        setLoading(false);
-      });
+      .finally(() => setLoading(false));
   }, []);
 
-  // Fonction pour demander une formation
   const demanderFormation = async (formationId) => {
-    const token = localStorage.getItem("token");
+    const collaborateurId = localStorage.getItem("collaborateur_id");
     setSelectedFormation(formationId);
 
     try {
@@ -47,8 +54,7 @@ const FormationsCatalogue = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          "Collaborateur-Id": localStorage.getItem("collaborateur_id"),
+          "Collaborateur-Id": collaborateurId,
         },
         body: JSON.stringify({ formation_id: formationId }),
       });
@@ -56,55 +62,82 @@ const FormationsCatalogue = () => {
       const data = await res.json();
 
       if (res.ok) {
-        setNotification(`Demande envoyée ! Statut : ${data.statut}`);
+        // Utilise directement le message du backend (parfait !)
+        setNotification(data.message);
+
+        // Si pas déjà demandée → on l’ajoute au Set pour griser le bouton
+        if (!data.deja_demandee) {
+          setDemandesEnvoyees(prev => new Set(prev).add(formationId));
+        }
       } else {
-        setNotification(`Erreur : ${data.error || "Impossible de traiter la demande"}`);
+        setNotification(data.message || "Erreur lors de la demande");
       }
     } catch (err) {
-      console.error(err);
-      setNotification("Erreur lors de l'envoi de la demande.");
+      setNotification("Erreur réseau");
     } finally {
       setSelectedFormation(null);
     }
   };
 
-  if (loading) return <p>Chargement des formations...</p>;
+  if (loading) return <p>Chargement...</p>;
 
   return (
     <div className="catalogue-container">
-      <button className="back-button" onClick={() => navigate("/")}>
-        ← Retour
-      </button>
-
+      <button className="back-button" onClick={() => navigate("/")}>← Retour</button>
       <h1>Catalogue des Formations</h1>
 
       <div className="cards-grid">
-        {formations.map((formation) => (
-          <div key={formation.id} className="formation-card">
-            <h2 className="formation-name">{formation.name}</h2>
-            <p><strong>Type :</strong> {formation.type}</p>
-            <p><strong>Prix :</strong> {formation.price === 0 ? "Gratuit" : `${formation.price} €`}</p>
-            <p><strong>Certifiée :</strong> {formation.certified ? "Oui" : "Non"}</p>
-            <div>
-              <strong>Rôles adaptés :</strong>
-              <ul>
-                {formation.specification.map((role, index) => (
-                  <li key={index}>{role}</li>
-                ))}
-              </ul>
-            </div>
+        {formations.map((formation) => {
+          const estDejaDemandee = demandesEnvoyees.has(formation.id);
+          const estGratuite = formation.price === 0;
 
-            <button
-              onClick={() => demanderFormation(formation.id)}
-              disabled={selectedFormation === formation.id}
-            >
-              {selectedFormation === formation.id ? "Envoi en cours..." : "Demander cette formation"}
-            </button>
-          </div>
-        ))}
+          return (
+            <div key={formation.id} className="formation-card">
+              <h2 className="formation-name">{formation.name}</h2>
+              <p><strong>Type :</strong> {formation.type}</p>
+              <p><strong>Prix :</strong> {estGratuite ? "Gratuit" : `${formation.price} €`}</p>
+              <p><strong>Certifiée :</strong> {formation.certified ? "Oui" : "Non"}</p>
+
+              <div>
+                <strong>Rôles adaptés :</strong>
+                <ul>
+                  {formation.specification.map((role, i) => (
+                    <li key={i}>{role}</li>
+                  ))}
+                </ul>
+              </div>
+
+              {role !== "Manager" && role !== "RH" && (
+                <button
+                  onClick={() => demanderFormation(formation.id)}
+                  disabled={selectedFormation === formation.id || estDejaDemandee}
+                  className={`demande-btn ${
+                    estDejaDemandee
+                      ? "deja"
+                      : estGratuite
+                      ? "gratuite"
+                      : formation.certified
+                      ? "certifiante"
+                      : "payante"
+                  }`}
+                >
+                  {selectedFormation === formation.id
+                    ? "Envoi..."
+                    : estDejaDemandee
+                    ? "Déjà demandée"
+                    : estGratuite
+                    ? "Suivre gratuitement"
+                    : formation.certified
+                    ? "Demander (certifiante)"
+                    : "Demander la formation"}
+                </button>
+            )}
+
+            </div>
+          );
+        })}
       </div>
 
-      {/* Notification */}
       <Notification message={notification} onClose={() => setNotification("")} />
     </div>
   );
