@@ -107,7 +107,7 @@ FORMATIONS = [
     # 5 internes et gratuites
     {"id": 1, "name": "Onboarding sécurité interne", "type": "Interne", "price": 0, "certified": False, "specification": ["Business Analyst", "Développeur", "Testeur"]},
     {"id": 2, "name": "Bonnes pratiques Git", "type": "Interne", "price": 0, "certified": False, "specification": ["Développeur", "Chef de projet"]},
-    {"id": 3, "name": "Sécurité des données (atelier)", "type": "Interne", "price": 0, "certified": False, "specification": ["Analyste", "Product Owner"]},
+    {"id": 3, "name": "Sécurité des données (atelier)", "type": "Interne", "price": 0, "certified": False, "specification": ["Business Analyste", "Product Owner"]},
     {"id": 4, "name": "Communication efficace en équipe", "type": "Interne", "price": 0, "certified": False, "specification": ["Tous"]},
     {"id": 5, "name": "Gestion du temps et priorisation", "type": "Interne", "price": 0, "certified": False, "specification": ["Chef de projet", "UX Designer"]},
 
@@ -147,21 +147,22 @@ def formations_list(request):
     if not user:
         return JsonResponse({"error": "Utilisateur non authentifié"}, status=401)
 
-    """ # Manager → accès à toutes les formations
-    if user["role"] in ["Manager", "RH"]:
-        return JsonResponse({"formations": FORMATIONS}, safe=False) """
-    # Manager → accès à toutes les formations
+    # Si Manager ou RH → tout voir
     if user["role"] in ["Manager", "RH"]:
         return JsonResponse({
             "formations": FORMATIONS,
-            "role": user["role"]  # ← AJOUT
+            "role": user["role"]
         }, safe=False)
 
-    # Collaborateur normal → filtrer par rôle
-    filtered = [
-        f for f in FORMATIONS
-        if "Tous" in f["specification"] or user["role"] in f["specification"]
-    ]
+    # Sinon → filtrage par rôle
+    role = user["role"]
+    filtered = []
+    for f in FORMATIONS:
+        specs = f["specification"]
+        # Accepte si "Tous" est dans la liste OU si le rôle du user est dedans
+        if "Tous" in specs or role in specs:
+            filtered.append(f)
+
     return JsonResponse({
         "formations": filtered,
         "role": user["role"]

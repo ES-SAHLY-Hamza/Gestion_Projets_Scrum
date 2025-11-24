@@ -11,6 +11,7 @@ const FormationsCatalogue = () => {
   const [notification, setNotification] = useState("");
   const [role, setRole] = useState("");
   const navigate = useNavigate();
+  const [selectedFormation, setSelectedFormation] = useState(null);  // ← AJOUTE ÇA !
 
   // Chargement des formations + demandes déjà faites
   useEffect(() => {
