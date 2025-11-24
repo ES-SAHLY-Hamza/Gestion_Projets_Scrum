@@ -1,0 +1,154 @@
+/* ========================================
+   MES DEMANDES - TABLEAU SIMPLE ET CLAIR
+   ======================================== */
+
+.mes-demandes-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Header */
+.mes-demandes-container h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 2rem;
+}
+
+.back-button {
+}
+
+.back-button:hover {
+}
+
+/* Tableau */
+.demandes-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.demandes-table thead {
+  background: #accef0;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.demandes-table th {
+  padding: 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1a4a8d;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.demandes-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  font-size: 0.9375rem;
+}
+
+.demandes-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.demandes-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Badges de statut */
+.statut-badge {
+  display: inline-block;
+  padding: 0.375rem 0.875rem;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+/* En attente - Orange */
+.statut-en-attente {
+  background: rgb(236, 206, 37);
+  color: #ffffff;
+  border: 1px solid #fed7aa;
+  font-weight: bold;
+}
+
+/* Validé - Vert */
+.statut-valide {
+  background: #22c55e;
+  color: white;
+  border: 1px solid #bbf7d0;
+  font-weight: bold;
+}
+
+/* Refusé - Rouge */
+.statut-refuse {
+  background: #fef2f2;
+  color: #d61d1d;
+  border: 1px solid #fecaca;
+}
+
+/* Badge prix */
+.prix-gratuit {
+  color: #059669;
+  font-weight: 600;
+}
+
+/* Badge certifiant */
+.certif-oui {
+  color: #0284c7;
+  font-weight: 600;
+}
+
+.certif-non {
+  color: #64748b;
+}
+
+/* Message vide */
+.empty-message {
+  text-align: center;
+  padding: 3rem;
+  color: #64748b;
+  font-size: 1rem;
+}
+
+/* Loading */
+.loading-message {
+  text-align: center;
+  padding: 3rem;
+  color: #64748b;
+  font-size: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .mes-demandes-container {
+    padding: 1rem;
+    overflow-x: auto;
+  }
+  
+  .demandes-table {
+    min-width: 900px;
+  }
+}
+
+@media (max-width: 768px) {
+  .mes-demandes-container h1 {
+    font-size: 1.5rem;
+  }
+  
+  .demandes-table th,
+  .demandes-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8125rem;
+  }
+}

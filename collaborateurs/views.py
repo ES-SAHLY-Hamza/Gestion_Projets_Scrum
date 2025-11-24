@@ -95,7 +95,10 @@ COLLABORATEURS = [
      "email": "alexandre.robin@entreprise.com", "password": "password28"},
     {"id": 30, "nom": "GHALI", "prenom": "Taha", "role": "Manager",
      "date_integration": "2024-11-21", "annees_experience": 10,
-     "email": "GHALI.Taha@entreprise.com", "password": "git "},
+     "email": "GHALI.Taha@entreprise.com", "password": "Taha123"},
+     {"id": 31, "nom": "ES-SAHLY", "prenom": "Hamza", "role": "RH",
+     "date_integration": "2020-11-21", "annees_experience": 12,
+     "email": "ES-SAHLY.Hamza@entreprise.com", "password": "hamza123"},
 ]
 
 
@@ -144,16 +147,25 @@ def formations_list(request):
     if not user:
         return JsonResponse({"error": "Utilisateur non authentifié"}, status=401)
 
+    """ # Manager → accès à toutes les formations
+    if user["role"] in ["Manager", "RH"]:
+        return JsonResponse({"formations": FORMATIONS}, safe=False) """
     # Manager → accès à toutes les formations
-    if user["role"] == "Manager":
-        return JsonResponse({"formations": FORMATIONS}, safe=False)
+    if user["role"] in ["Manager", "RH"]:
+        return JsonResponse({
+            "formations": FORMATIONS,
+            "role": user["role"]  # ← AJOUT
+        }, safe=False)
 
     # Collaborateur normal → filtrer par rôle
     filtered = [
         f for f in FORMATIONS
         if "Tous" in f["specification"] or user["role"] in f["specification"]
     ]
-    return JsonResponse({"formations": filtered}, safe=False)
+    return JsonResponse({
+        "formations": filtered,
+        "role": user["role"]
+    }, safe=False)
 
 
 class CollaborateurMockView(APIView):
@@ -163,7 +175,7 @@ class CollaborateurMockView(APIView):
             return Response({"error": "Non authentifié"}, status=status.HTTP_401_UNAUTHORIZED)
 
         # Manager → voir tous les collaborateurs
-        if user["role"] == "Manager":
+        if user["role"] in ["Manager", "RH"]:
             safe_collaborateurs = [
                 {k: v for k, v in c.items() if k not in ["email", "password"]}
                 for c in COLLABORATEURS
@@ -227,6 +239,15 @@ class DemanderFormationView(APIView):
         if not user:
             return Response({"error": "Utilisateur inconnu"}, status=403)
 
+        # 👉 AJOUTER ICI
+        if user["role"] in ["Manager", "RH"]:
+            return Response(
+                {
+                    "error": "Les Managers et RH ne peuvent pas demander des formations.",
+                    "autorise": False
+                },
+                status=403
+            )
         formation_id = request.data.get("formation_id")
         formation = next((f for f in FORMATIONS if f["id"] == int(formation_id)), None)
         if not formation:
@@ -250,10 +271,10 @@ class DemanderFormationView(APIView):
             statut = "Validée"
             message = "Formation gratuite validée automatiquement !"
         elif formation["certified"]:
-            statut = "En attente Manager & RH"
+            statut = "En attente d’approbation"
             message = "Demande envoyée → Manager puis RH (formation certifiante payante)"
         else:
-            statut = "En attente Manager"
+            statut = "En attente d’approbation"
             message = "Demande envoyée au Manager pour validation"
 
         demande = {
@@ -304,24 +325,45 @@ class DemandesManagerView(APIView):
         demandes_en_attente = [d for d in DEMANDES if "attente" in d["statut"].lower()]
         return Response({"demandes": demandes_en_attente})
     
-# views.py
-@login_required
-def mes_demandes_formation(request):
-    demandes = DemandeFormation.objects.filter(
-        collaborateur_id=request.user.collaborateur.id
-    ).select_related('formation').order_by('-date_demande')
 
-    data = [{
-        "id": d.id,
-        "formation": {
-            "name": d.formation.nom,
-            "type": d.formation.type,
-            "price": d.formation.prix,
-        },
-        "statut": d.get_statut_display(),
-        "en_attente_de": d.en_attente_de,  # "RH" ou "manager"
-        "raison_refus": d.raison_refus,
-        "date_demande": d.date_demande,
-    } for d in demandes]
+class ManagerValidationView(APIView):
+    def post(self, request):
+        user_id = request.headers.get("Collaborateur-Id")
+        if not user_id:
+            return Response({"error": "Collaborateur-Id requis"}, status=403)
 
-    return JsonResponse({"demandes": data})
+        user = get_user_from_request(request)
+        if not user or user["role"] != "Manager":
+            return Response({"error": "Accès refusé - Manager seulement"}, status=403)
+
+        data = request.data
+        demande_id = data.get("demande_id")
+        action = data.get("action")  # "valider" ou "refuser"
+
+        if not demande_id or action not in ["valider", "refuser"]:
+            return Response({"error": "Paramètres invalides"}, status=400)
+
+        # Trouver la demande
+        for demande in DEMANDES:
+            if demande["id"] == demande_id:
+
+                if action == "valider":
+
+                    # On récupère la formation liée
+                    formation = next((f for f in FORMATIONS if f["id"] == demande["formation_id"]), None)
+
+                    # Cas 1 : certifiante + payante → en attente RH
+                    if formation and formation["certified"] and formation["price"] > 0:
+                        demande["statut"] = "Validée par le Manager - En attente RH"
+
+                    # Cas 2 : tous les autres cas → validation définitive côté collaborateur
+                    else:
+                        demande["statut"] = "Validée par le Manager"
+
+                else:
+                    demande["statut"] = "Refusée par le Manager"
+
+
+                return Response({"message": f"Demande {action} avec succès"})
+
+        return Response({"error": "Demande introuvable"}, status=404)
