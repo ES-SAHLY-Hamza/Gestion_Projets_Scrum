@@ -347,9 +347,21 @@ class ManagerValidationView(APIView):
             if demande["id"] == demande_id:
 
                 if action == "valider":
-                    demande["statut"] = "Validée par le Manager"
+
+                    # On récupère la formation liée
+                    formation = next((f for f in FORMATIONS if f["id"] == demande["formation_id"]), None)
+
+                    # Cas 1 : certifiante + payante → en attente RH
+                    if formation and formation["certified"] and formation["price"] > 0:
+                        demande["statut"] = "Validée par le Manager - En attente RH"
+
+                    # Cas 2 : tous les autres cas → validation définitive côté collaborateur
+                    else:
+                        demande["statut"] = "Validée par le Manager"
+
                 else:
                     demande["statut"] = "Refusée par le Manager"
+
 
                 return Response({"message": f"Demande {action} avec succès"})
 
