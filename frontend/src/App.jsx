@@ -29,6 +29,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/collaborateurs" element={<CollaboratorsList />} />
             <Route path="/formations" element={<FormationsCatalogue />} />
+            <Route path="/mes-demandes" element={<MesDemandesFormation />} />
             {/* Toute autre route → accueil */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>

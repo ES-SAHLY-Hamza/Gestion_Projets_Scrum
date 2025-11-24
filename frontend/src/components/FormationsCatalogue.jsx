@@ -1,113 +1,122 @@
-// src/components/FormationsCatalogue.jsx
+// src/components/MesDemandesFormation.jsx  (nouveau nom plus clair)
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/FormationsCatalogue.css";
+import "../styles/FormationsCatalogue.css"; // tu peux réutiliser ou créer un nouveau CSS
 import Notification from "./Notification";
 
-const FormationsCatalogue = () => {
-  const [formations, setFormations] = useState([]);
+const MesDemandesFormation = () => {
+  const [demandes, setDemandes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedFormation, setSelectedFormation] = useState(null);
   const [notification, setNotification] = useState("");
   const navigate = useNavigate();
 
-  // Récupérer les formations du backend
   useEffect(() => {
     const token = localStorage.getItem("token");
     const collaborateurId = localStorage.getItem("collaborateur_id");
 
-    fetch("http://127.0.0.1:8000/api/formations/", {
+    if (!token || !collaborateurId) {
+      setNotification("Vous devez être connecté.");
+      setLoading(false);
+      return;
+    }
+
+    fetch("http://127.0.0.1:8000/api/formations/mes-demandes/", {
       headers: {
         Authorization: `Bearer ${token}`,
         "Collaborateur-Id": collaborateurId,
       },
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Erreur HTTP " + res.status);
+        if (!res.ok) throw new Error("Erreur de chargement");
         return res.json();
       })
       .then((data) => {
-        setFormations(data.formations || []);
+        setDemandes(data.demandes || []);
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Erreur de chargement :", err);
-        setNotification("Erreur lors du chargement des formations.");
+        console.error(err);
+        setNotification("Impossible de charger vos demandes.");
         setLoading(false);
       });
   }, []);
 
-  // Fonction pour demander une formation
-  const demanderFormation = async (formationId) => {
-    const token = localStorage.getItem("token");
-    setSelectedFormation(formationId);
+  // Fonction pour afficher le statut avec couleur et détail
+  const getStatutBadge = (demande) => {
+    const statut = demande.statut?.toLowerCase();
 
-    try {
-      const res = await fetch("http://127.0.0.1:8000/api/formations/demander/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          "Collaborateur-Id": localStorage.getItem("collaborateur_id"),
-        },
-        body: JSON.stringify({ formation_id: formationId }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setNotification(`Demande envoyée ! Statut : ${data.statut}`);
-      } else {
-        setNotification(`Erreur : ${data.error || "Impossible de traiter la demande"}`);
-      }
-    } catch (err) {
-      console.error(err);
-      setNotification("Erreur lors de l'envoi de la demande.");
-    } finally {
-      setSelectedFormation(null);
+    if (statut === "validée") {
+      return <span className="statut valide">Validée</span>;
     }
+    if (statut === "refusée") {
+      return <span className="statut refuse">Refusée</span>;
+    }
+    if (statut === "en cours de décision" || statut === "en attente") {
+      const attente = demande.en_attente_de === "RH" ? "En attente RH" : "En attente Manager";
+      return (
+        <span className="statut en-cours">
+          En cours <small style={{ display: "block", fontSize: "0.8em" }}>({attente})</small>
+        </span>
+      );
+    }
+    return <span className="statut inconnu">Statut inconnu</span>;
   };
 
-  if (loading) return <p>Chargement des formations...</p>;
+  if (loading) return <p>Chargement de vos demandes...</p>;
+  if (demandes.length === 0)
+    return (
+      <div className="catalogue-container">
+        <button className="back-button" onClick={() => navigate(-1)}>
+          ← Retour
+        </button>
+        <h1>Mes Demandes de Formation</h1>
+        <p style={{ textAlign: "center", marginTop: "2rem", color: "#666" }}>
+          Vous n'avez pas encore demandé de formation.
+        </p>
+      </div>
+    );
 
   return (
     <div className="catalogue-container">
-      <button className="back-button" onClick={() => navigate("/")}>
+      <button className="back-button" onClick={() => navigate(-1)}>
         ← Retour
       </button>
 
-      <h1>Catalogue des Formations</h1>
+      <h1>Mes Demandes de Formation</h1>
 
       <div className="cards-grid">
-        {formations.map((formation) => (
-          <div key={formation.id} className="formation-card">
-            <h2 className="formation-name">{formation.name}</h2>
-            <p><strong>Type :</strong> {formation.type}</p>
-            <p><strong>Prix :</strong> {formation.price === 0 ? "Gratuit" : `${formation.price} €`}</p>
-            <p><strong>Certifiée :</strong> {formation.certified ? "Oui" : "Non"}</p>
-            <div>
-              <strong>Rôles adaptés :</strong>
-              <ul>
-                {formation.specification.map((role, index) => (
-                  <li key={index}>{role}</li>
-                ))}
-              </ul>
+        {demandes.map((demande) => (
+          <div key={demande.id} className="formation-card demande-card">
+            <h2 className="formation-name">{demande.formation.name}</h2>
+
+            <p>
+              <strong>Type :</strong> {demande.formation.type}
+            </p>
+            <p>
+              <strong>Prix :</strong>{" "}
+              {demande.formation.price === 0 ? "Gratuit" : `${demande.formation.price} €`}
+            </p>
+            <p>
+              <strong>Date de demande :</strong>{" "}
+              {new Date(demande.date_demande).toLocaleDateString("fr-FR")}
+            </p>
+
+            <div className="statut-container">
+              <strong>État :</strong> {getStatutBadge(demande)}
             </div>
 
-            <button
-              onClick={() => demanderFormation(formation.id)}
-              disabled={selectedFormation === formation.id}
-            >
-              {selectedFormation === formation.id ? "Envoi en cours..." : "Demander cette formation"}
-            </button>
+            {demande.raison_refus && (
+              <div className="raison-refus">
+                <strong>Raison du refus :</strong> {demande.raison_refus}
+              </div>
+            )}
           </div>
         ))}
       </div>
 
-      {/* Notification */}
       <Notification message={notification} onClose={() => setNotification("")} />
     </div>
   );
 };
 
-export default FormationsCatalogue;
+export default MesDemandesFormation;

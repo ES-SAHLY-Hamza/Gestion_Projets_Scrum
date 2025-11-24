@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
 
 
 # Données globales (avec email + password)
@@ -94,7 +95,7 @@ COLLABORATEURS = [
      "email": "alexandre.robin@entreprise.com", "password": "password28"},
     {"id": 30, "nom": "GHALI", "prenom": "Taha", "role": "Manager",
      "date_integration": "2024-11-21", "annees_experience": 10,
-     "email": "GHALI.Taha@entreprise.com", "password": "Taha123"},
+     "email": "GHALI.Taha@entreprise.com", "password": "git "},
 ]
 
 
@@ -302,3 +303,25 @@ class DemandesManagerView(APIView):
 
         demandes_en_attente = [d for d in DEMANDES if "attente" in d["statut"].lower()]
         return Response({"demandes": demandes_en_attente})
+    
+# views.py
+@login_required
+def mes_demandes_formation(request):
+    demandes = DemandeFormation.objects.filter(
+        collaborateur_id=request.user.collaborateur.id
+    ).select_related('formation').order_by('-date_demande')
+
+    data = [{
+        "id": d.id,
+        "formation": {
+            "name": d.formation.nom,
+            "type": d.formation.type,
+            "price": d.formation.prix,
+        },
+        "statut": d.get_statut_display(),
+        "en_attente_de": d.en_attente_de,  # "RH" ou "manager"
+        "raison_refus": d.raison_refus,
+        "date_demande": d.date_demande,
+    } for d in demandes]
+
+    return JsonResponse({"demandes": data})
