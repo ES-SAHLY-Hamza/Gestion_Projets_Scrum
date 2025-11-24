@@ -1,5 +1,5 @@
 from django.urls import path
-from collaborateurs.views import CollaborateurMockView, DemandesManagerView, MesDemandesView, formations_list, LoginMockView, DemanderFormationView
+from collaborateurs.views import CollaborateurMockView, DemandesManagerView, MesDemandesView, formations_list, LoginMockView, DemanderFormationView,ManagerValidationView
 
 urlpatterns = [
     path('collaborateurs/', CollaborateurMockView.as_view(), name='collaborateurs-mock'),
@@ -13,4 +13,5 @@ urlpatterns = [
     path('formation/demander/', DemanderFormationView.as_view(), name='demander'),
     path('mes-demandes/', MesDemandesView.as_view(), name='mes-demandes'),
     path('manager/demandes/', DemandesManagerView.as_view(), name='demandes-manager'),
+    path('manager/demandes/valider/', ManagerValidationView.as_view(), name='demandes-valider'),
 ]
