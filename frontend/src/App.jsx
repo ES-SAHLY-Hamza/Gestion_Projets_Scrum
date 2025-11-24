@@ -31,12 +31,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/collaborateurs" element={<CollaboratorsList />} />
             <Route path="/formations" element={<FormationsCatalogue />} />
-<<<<<<< HEAD
-            <Route path="/mes-demandes" element={<MesDemandesFormation />} />
-=======
             <Route path="/mes-demandes" element={<MesDemandes />} />
             <Route path="/manager-demandes" element={<ManagerDemandes />} />
->>>>>>> ffe53160afb115b1d99ad236361b865867f77a37
             {/* Toute autre route → accueil */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
